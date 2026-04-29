@@ -119,7 +119,7 @@ with col2:
 with col3:
     kd = st.number_input("Kd", value=0.5, step=0.1, format="%.2f")
 with col4:
-    sim_time = st.number_input("Simulation Time (s)", value=10, step=1)
+    sim_time = st.number_input("Simulation Time (s)", value=100, step=1)
 
 st.subheader("Plant Dynamics")
 col_p1, col_p2, col_p3, col_p4 = st.columns(4)
