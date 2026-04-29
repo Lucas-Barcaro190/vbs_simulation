@@ -8,6 +8,7 @@ st.set_page_config(layout="wide", page_title="VBS Simulation")
 def pid_controller(error, error_prev, integral, kp, ki, kd, dt):
     p_term = kp * error
     integral += error * dt
+    # saturation
     integral = np.clip(integral, -0.5, 0.5)
     i_term = ki * integral
     if dt > 0:
@@ -47,6 +48,8 @@ def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.00
     else:
         ticks_per_update = 1
     
+    pid_out = 0.0
+    
     for i in range(n):
         if use_sensor_model:
             if i % ticks_per_update == 0:
@@ -60,16 +63,23 @@ def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.00
                 
                 last_measured_depth = sum(ma_buffer) / len(ma_buffer)
                 
+                # Run PID ONLY when a new sensor reading arrives
+                error = depth_command[i] - last_measured_depth
+                pid_out, error_integral = pid_controller(
+                    error, error_prev, error_integral, kp, ki, kd, sensor_update_rate > 0 and 1.0/sensor_update_rate or dt
+                )
+                error_prev = error
+                
             measured_depth[i] = last_measured_depth
         else:
             measured_depth[i] = depth[i]
+            error = depth_command[i] - depth[i]
+            pid_out, error_integral = pid_controller(
+                error, error_prev, error_integral, kp, ki, kd, dt
+            )
+            error_prev = error
             
-        error = depth_command[i] - measured_depth[i]
-        pid_out, error_integral = pid_controller(
-            error, error_prev, error_integral, kp, ki, kd, dt
-        )
         pid_output[i] = pid_out
-        error_prev = error
         
         # saturation
         desired_piston_pos = np.clip(pid_out, -max_piston_height, max_piston_height)
