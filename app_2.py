@@ -103,7 +103,7 @@ def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.1,
             
     return t, depth_command, depth, pid_output, actual_piston_height, motor_pulses, measured_depth
 
-def samplewave(T=10, dt=0.002):
+def samplewave(T=100, dt=0.002):
     t = np.arange(0, T + 1e-5, dt)
     depth_command = np.zeros_like(t)
     depth_command[t >= 2.0] = 1.0
@@ -113,11 +113,11 @@ st.title("VBS Closed-Loop Delta Modulation Simulation")
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    kp = st.number_input("Kp", value=0.1, step=0.01, format="%.3f")
+    kp = st.number_input("Kp", value=0.1, step=0.001, format="%.6f")
 with col2:
-    ki = st.number_input("Ki", value=0.01, step=0.001, format="%.4f")
+    ki = st.number_input("Ki", value=0.01, step=0.0001, format="%.6f")
 with col3:
-    kd = st.number_input("Kd", value=0.5, step=0.1, format="%.2f")
+    kd = st.number_input("Kd", value=0.5, step=0.1, format="%.6f")
 with col4:
     sim_time = st.number_input("Simulation Time (s)", value=100, step=1)
 
