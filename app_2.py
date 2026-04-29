@@ -17,7 +17,7 @@ def pid_controller(error, error_prev, integral, kp, ki, kd, dt):
     output = p_term + i_term + d_term
     return output, integral
 
-def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.1, ki=0.01, kd=0.5, k_p=62.409, a_1=6.8, a_2=0.7, c=0.0, sensor_noise_std=0.0017, sensor_update_rate=10.0, use_sensor_model=True, ma_window_size=1):
+def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.001, ki=0.0001, kd=0.5, k_p=62.409, a_1=6.8, a_2=0.7, c=0.0, sensor_noise_std=0.0017, sensor_update_rate=10.0, use_sensor_model=True, ma_window_size=1):
     max_volume_change = 0.0001272
     piston_area = 0.00636177
     max_piston_height = max_volume_change / piston_area
@@ -71,13 +71,16 @@ def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.1,
         pid_output[i] = pid_out
         error_prev = error
         
+        # saturation
         desired_piston_pos = np.clip(pid_out, -max_piston_height, max_piston_height)
         
         pos_error = desired_piston_pos - target_piston_pos
         pulse = 0
+
+        # binary operation (either expand or contract)
         if pos_error >= step_size:
             pulse = step_size
-        elif pos_error <= -step_size:
+        elif pos_error < -step_size:
             pulse = -step_size
             
         motor_pulses[i] = pulse
@@ -87,6 +90,7 @@ def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.1,
         pos_diff = target_piston_pos - actual_piston_pos
         max_move = piston_speed * dt
         
+        # saturation
         if abs(pos_diff) <= max_move:
             actual_piston_pos = target_piston_pos
         else:
@@ -103,7 +107,7 @@ def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.1,
             
     return t, depth_command, depth, pid_output, actual_piston_height, motor_pulses, measured_depth
 
-def samplewave(T=100, dt=0.002):
+def samplewave(T=10, dt=0.002):
     t = np.arange(0, T + 1e-5, dt)
     depth_command = np.zeros_like(t)
     depth_command[t >= 2.0] = 1.0
@@ -113,9 +117,9 @@ st.title("VBS Closed-Loop Delta Modulation Simulation")
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    kp = st.number_input("Kp", value=0.1, step=0.001, format="%.6f")
+    kp = st.number_input("Kp", value=0.001, step=0.01, format="%.6f")
 with col2:
-    ki = st.number_input("Ki", value=0.01, step=0.0001, format="%.6f")
+    ki = st.number_input("Ki", value=0.0001, step=0.001, format="%.6f")
 with col3:
     kd = st.number_input("Kd", value=0.5, step=0.1, format="%.6f")
 with col4:
