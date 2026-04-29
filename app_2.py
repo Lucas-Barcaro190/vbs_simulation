@@ -131,7 +131,7 @@ with col1:
 with col2:
     ki = st.number_input("Ki", value=0.0001, step=0.001, format="%.6f")
 with col3:
-    kd = st.number_input("Kd", value=0.5, step=0.1, format="%.6f")
+    kd = st.number_input("Kd", value=0.005, step=0.1, format="%.6f")
 with col4:
     sim_time = st.number_input("Simulation Time (s)", value=100, step=1)
 
