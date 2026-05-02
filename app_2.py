@@ -42,6 +42,7 @@ def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.00
     
     last_measured_depth = 0.0
     ma_buffer = []
+    bucket = 0.0
     
     if use_sensor_model and sensor_update_rate > 0:
         ticks_per_update = max(1, int(1.0 / (sensor_update_rate * dt)))
@@ -84,14 +85,16 @@ def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.00
         # saturation
         desired_piston_pos = np.clip(pid_out, -max_piston_height, max_piston_height)
         
-        pos_error = desired_piston_pos - target_piston_pos
+        # Delta-Sigma Modulation
+        bucket += desired_piston_pos
         pulse = 0
 
-        # binary operation (either expand or contract)
-        if pos_error >= step_size:
+        if bucket > step_size / 2:
             pulse = step_size
-        elif pos_error < -step_size:
+            bucket -= step_size
+        elif bucket < -step_size / 2:
             pulse = -step_size
+            bucket -= -step_size
             
         motor_pulses[i] = pulse
         target_piston_pos += pulse
