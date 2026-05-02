@@ -141,13 +141,15 @@ with col_p4:
     c_nom = st.number_input("Nominal Constant (c)", value=0.0, step=0.1, format="%.2f")
 
 st.subheader("Robustness Criteria & Monte Carlo Settings")
-col_r1, col_r2, col_r3 = st.columns(3)
+col_r1, col_r2, col_r3, col_r4 = st.columns(4)
 with col_r1:
     max_overshoot = st.number_input("Max Overshoot (%)", value=10.0, step=1.0)
 with col_r2:
     max_settling = st.number_input("Max Settling Time (s)", value=60.0, step=1.0)
 with col_r3:
     num_runs = st.number_input("Monte Carlo Runs", value=50, step=10, min_value=1)
+with col_r4:
+    percentage_val = st.number_input("Variation Percentage (%)", value=10, step=1, min_value=5)
 
 if st.button("Run Robustness Test", type="primary"):
     dt = 0.002
@@ -162,13 +164,15 @@ if st.button("Run Robustness Test", type="primary"):
     all_settling_times = []
     pass_count = 0
     fail_count = 0
+
+    variation_factor = percentage_val / 100.0
     
     for run in range(int(num_runs)):
         # Randomize parameters +/- 10%
-        k_p_rand = np.random.uniform(k_p_nom * 0.9, k_p_nom * 1.1)
-        a_1_rand = np.random.uniform(a_1_nom * 0.9, a_1_nom * 1.1)
-        a_2_rand = np.random.uniform(a_2_nom * 0.9, a_2_nom * 1.1)
-        c_rand = c_nom # Assuming constant isn't varied
+        k_p_rand = np.random.uniform(k_p_nom * (1 - variation_factor), k_p_nom * (1 + variation_factor))
+        a_1_rand = np.random.uniform(a_1_nom * (1 - variation_factor), a_1_nom * (1 + variation_factor))
+        a_2_rand = np.random.uniform(a_2_nom * (1 - variation_factor), a_2_nom * (1 + variation_factor))
+        c_rand = c_nom + np.random.uniform(-variation_factor, variation_factor)
         
         noise_rand = np.random.uniform(1.0, 3.0) / 1000.0 # 1 to 3 mm std dev
         
