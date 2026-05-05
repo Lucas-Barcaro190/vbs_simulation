@@ -20,7 +20,7 @@ def pid_controller(error, error_prev, integral, kp, ki, kd, dt):
 def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.01, ki=0.001, kd=0.1, k_p=62.409, 
                              a_1=6.8, a_2=0.7, c=0.0, sensor_noise_std=0.0017, sensor_update_rate=10.0,
                              use_sensor_model=True, ma_window_size=5, dist_type="None", dist_amp=0.0, 
-                             dist_freq=1.0, dist_start=5.0, noise_power=0.0):
+                             dist_freq=1.0, dist_start=5.0):
     max_volume_change = 0.0001272
     piston_area = 0.00636177
     max_piston_height = max_volume_change / piston_area
@@ -53,10 +53,7 @@ def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.01
         if use_sensor_model:
             if i % ticks_per_update == 0:
                 std_noise = np.random.normal(0, sensor_noise_std)
-                sensor_dt = 1.0 / sensor_update_rate if sensor_update_rate > 0 else dt
-                bl_noise = np.random.normal(0, np.sqrt(noise_power / 1000*sensor_dt)) if noise_power > 0 else 0.0
-                noise = std_noise + bl_noise
-                raw_depth = depth[i] + noise
+                raw_depth = depth[i] + std_noise
                 ma_buffer.append(raw_depth)
                 if len(ma_buffer) > ma_window_size:
                     ma_buffer.pop(0)
@@ -179,8 +176,6 @@ with col_d4:
 
 st.subheader("Sensor Noise Settings")
 col_s1, col_s2 = st.columns(2)
-with col_s1:
-    noise_pow = st.number_input("BL Noise Power", value=0.0, step=0.0001, format="%.4f")
 with col_s2:
     base_noise_std = st.number_input("Base Noise Std Dev (mm)", value=1.7, step=0.1)
 
@@ -213,7 +208,7 @@ if st.button("Run Robustness Test", type="primary"):
             depth_command, dt=dt, step_size=step_size, kp=kp, ki=ki, kd=kd,
             k_p=k_p_rand, a_1=a_1_rand, a_2=a_2_rand, c=c_rand,
             sensor_noise_std=noise_rand, sensor_update_rate=10.0, use_sensor_model=True, ma_window_size=5,
-            dist_type=d_type, dist_amp=d_amp, dist_freq=d_freq, dist_start=d_start, noise_power=noise_pow
+            dist_type=d_type, dist_amp=d_amp, dist_freq=d_freq, dist_start=d_start
         )
         
         ov, st_time = calculate_metrics(t, depth_actual, depth_command)
