@@ -17,7 +17,10 @@ def pid_controller(error, error_prev, integral, kp, ki, kd, dt):
     output = p_term + i_term + d_term
     return output, integral
 
-def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.01, ki=0.001, kd=0.1, k_p=62.409, a_1=6.8, a_2=0.7, c=0.0, sensor_noise_std=0.0017, sensor_update_rate=10.0, use_sensor_model=True, ma_window_size=5, dist_type="None", dist_amp=0.0, dist_freq=1.0, dist_start=5.0, noise_power=0.0):
+def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.01, ki=0.001, kd=0.1, k_p=62.409, 
+                             a_1=6.8, a_2=0.7, c=0.0, sensor_noise_std=0.0017, sensor_update_rate=10.0,
+                             use_sensor_model=True, ma_window_size=5, dist_type="None", dist_amp=0.0, 
+                             dist_freq=1.0, dist_start=5.0, noise_power=0.0):
     max_volume_change = 0.0001272
     piston_area = 0.00636177
     max_piston_height = max_volume_change / piston_area
@@ -51,7 +54,7 @@ def simulate_buoyancy_system(depth_command, dt=0.002, step_size=0.00005, kp=0.01
             if i % ticks_per_update == 0:
                 std_noise = np.random.normal(0, sensor_noise_std)
                 sensor_dt = 1.0 / sensor_update_rate if sensor_update_rate > 0 else dt
-                bl_noise = np.random.normal(0, np.sqrt(noise_power / sensor_dt)) if noise_power > 0 else 0.0
+                bl_noise = np.random.normal(0, np.sqrt(noise_power / 1000*sensor_dt)) if noise_power > 0 else 0.0
                 noise = std_noise + bl_noise
                 raw_depth = depth[i] + noise
                 ma_buffer.append(raw_depth)
@@ -204,7 +207,6 @@ if st.button("Run Robustness Test", type="primary"):
         a_2_rand = np.random.uniform(a_2_nom * (1 - variation_percentage), a_2_nom * (1 + variation_percentage))
         c_rand = c_nom # Assuming constant isn't varied
         
-        # We can either vary base noise or keep it fixed, let's vary base noise around the user specified base_noise_std
         noise_rand = np.random.uniform(base_noise_std * 0.8, base_noise_std * 1.2) / 1000.0
         
         _, _, depth_actual = simulate_buoyancy_system(
